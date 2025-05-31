@@ -14,10 +14,7 @@ def main():
     else:
         print("Failed to download CSV file.")
 
-def download_csv():
-    spreadsheet_url = os.getenv("SPREADSHEET_URL")
-    if not spreadsheet_url:
-        raise ValueError("SPREADSHEET_URL environment variable is not set.")
+def download_csv(spreadsheet_url=None):
     driver = webdriver.Chrome()
     driver.get(spreadsheet_url)
     # Wait for the page to load
