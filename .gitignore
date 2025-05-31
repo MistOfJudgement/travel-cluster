@@ -1,2 +1,3 @@
 .env
 csv_snapshots/*.csv
+__pycache__

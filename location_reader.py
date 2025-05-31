@@ -52,9 +52,10 @@ def download_csv():
             #move to cwd
             if not os.path.exists("csv_snapshots"):
                 os.makedirs("csv_snapshots")
-            os.rename(csv_file, os.path.join(os.getcwd(), "csv_snapshots", page_title + time.strftime("-%Y%m%d-%H%M%S.csv")))
-            return csv_file
-            
+            new_path = os.path.join(os.getcwd(), "csv_snapshots", page_title + time.strftime("-%Y%m%d-%H%M%S.csv"))
+            os.rename(csv_file, new_path)
+            return new_path
+
     else:
         print("No CSV file found.")
     return None
