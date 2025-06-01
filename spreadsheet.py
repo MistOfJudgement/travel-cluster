@@ -26,19 +26,28 @@ class SpreadsheetController:
         col_offset = col - self.col
         self.row = row
         self.col = col
+        delay = 0.1
+        to_send = []
         if row_offset > 0:
             for _ in range(row_offset):
-                self.actions.send_keys(Keys.ARROW_DOWN)
+                to_send.append(Keys.ARROW_DOWN)
         elif row_offset < 0:
             for _ in range(-row_offset):
-                self.actions.send_keys(Keys.ARROW_UP)
+                to_send.append(Keys.ARROW_UP)
         if col_offset > 0:
             for _ in range(col_offset):
-                self.actions.send_keys(Keys.ARROW_RIGHT)
+                to_send.append(Keys.ARROW_RIGHT)
         elif col_offset < 0:
             for _ in range(-col_offset):
-                self.actions.send_keys(Keys.ARROW_LEFT)
-        self.actions.perform()
+                to_send.append(Keys.ARROW_LEFT)
+        for key in to_send:
+            self.actions.send_keys(key)
+            self.actions.perform()
+            time.sleep(delay)
+    def reset_loc(self):
+       self.shortcut([Keys.CONTROL, Keys.HOME])
+       self.col = 0
+       self.row = 0 
     def shortcut(self, keys):
         modifiers = keys[:-1]
         key = keys[-1]
@@ -48,11 +57,14 @@ class SpreadsheetController:
         for modifier in modifiers:
             self.actions.key_up(modifier)
         self.actions.perform()
+        time.sleep(0.1)
+
     def put_text(self, text):
         self.actions.send_keys(text)
         self.actions.send_keys(Keys.ENTER)
         self.row += 1
         self.actions.perform()
+        time.sleep(0.1)  # Wait for the text to be entered
     
 if __name__ == "__main__":
     load_dotenv()

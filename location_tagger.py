@@ -33,6 +33,8 @@ class EditTracker:
         if isinstance(col, str):
             col = self.col_index(col)
         if row < len(self.data) and col < len(self.headers):
+            if self.get_value(row, col) == value:
+                return
             self.data[row][col] = value
             self.add_edit(row+1, col, value)
         else:
@@ -53,23 +55,31 @@ def read_csv_file(csv_filepath):
         for row in reader:
             data.append(row)
     return headers, data 
+
 def load_data(file_provider) -> EditTracker:
     file = file_provider()
     headers, file_data = read_csv_file(file)
     return EditTracker(headers, file_data)
+
 def tag_locations(data_tracker, geocoder_service):
     for i, row in enumerate(data_tracker.get_data()):
-        if not row[data_tracker.col_index("Address")]:
-            continue
         if row[data_tracker.col_index("Latitude")] and row[data_tracker.col_index("Longitude")]:
             continue
+
         address = row[data_tracker.col_index("Address")]
-        lat, long = geocoder_service(address)
-        if not lat or not long:
+        if not address:
+            if row[data_tracker.col_index("Place")].lower().startswith("any"):
+                print(f"Skipping row {i+1} with empty address and 'Any' place.")
+                continue
+            address = row[data_tracker.col_index("Place")]
+        print(f"Geocoding address: {address} (Row {i+1})")
+        lat, long, clean_address = geocoder_service(address)
+        if not lat or not long or not clean_address:
             print(f"Failed to geocode address: {address}")
             continue
         data_tracker.set_value(i, data_tracker.col_index("Latitude"), lat)
         data_tracker.set_value(i, data_tracker.col_index("Longitude"), long)
+        data_tracker.set_value(i, data_tracker.col_index("Address"), clean_address)
 
 mock_lat = 0.0
 mock_long = 0.0
@@ -111,6 +121,9 @@ def apply_edits(tracker, url):
     
     import time
     for row, col, val in tracker.get_edits():
+        print(f"Editing cell ({row}, {col}) with value: {val}")
+        # remote.reset_loc()
+        # time.sleep(0.1)
         remote.navigate_to_cell(col, row)
         time.sleep(0.1)  # Wait for the cell to be focused
         remote.put_text(str(val))

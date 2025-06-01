@@ -2,6 +2,7 @@
 import time
 import selenium.webdriver as webdriver
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
 
 def get_coordinates(address):
     driver = webdriver.Chrome()
@@ -29,9 +30,13 @@ def get_coordinates(address):
             coords = url.split("@")[1].split(",")
             latitude = coords[0]
             longitude = coords[1].split(",")[0]
+            driver.implicitly_wait(3)
+            time.sleep(1)  # Wait for the address to be displayed
 
+            clean_address = driver.find_element(By.CSS_SELECTOR, '[data-tooltip="Copy address"]').get_attribute("aria-label").split("Address: ")[-1] 
+            # clean_address = driver.find_element(By.XPATH, "//[@data-item-id='address']").get_attribute("aria-label").split("Address, ")[-1]
             print(f"Coordinates for '{address}': {latitude}, {longitude}")
-            return latitude, longitude
+            return latitude, longitude, clean_address
         else:
             print(f"Could not find coordinates for '{address}'.")
             return None
