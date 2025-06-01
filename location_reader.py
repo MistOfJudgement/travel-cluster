@@ -5,10 +5,11 @@ import os
 import glob
 from selenium.webdriver.common.keys import Keys
 import time
-
+from utils import get_latest_csv_filepath
 def main():
     load_dotenv()
-    csv_file = download_csv()
+    url = os.getenv("SPREADSHEET_URL")
+    csv_file = download_csv(url)
     if csv_file:
         print(f"CSV file downloaded successfully: {csv_file}")
     else:
@@ -38,8 +39,10 @@ def download_csv(spreadsheet_url=None):
     driver.quit()
 
     # Get csv file
-    csv_file = get_latest_csv_file()
+    download_folder = os.path.join(os.path.expanduser("~"), "Downloads")
+    csv_file = get_latest_csv_filepath(download_folder)
     if csv_file:
+
         filename = os.path.basename(csv_file)
         if not filename.startswith(page_title):
             print(f"Warning: The downloaded file '{filename}' does not match the page title '{page_title}'.")
@@ -56,12 +59,5 @@ def download_csv(spreadsheet_url=None):
     else:
         print("No CSV file found.")
     return None
-def get_latest_csv_file():
-    downloads_folder = os.path.join(os.path.expanduser("~"), "Downloads")
-    csv_files = glob.glob(os.path.join(downloads_folder, "*.csv"))
-    if not csv_files:
-        return None
-    latest_file = max(csv_files, key=os.path.getctime)
-    return latest_file
 if __name__ == "__main__":
     main()

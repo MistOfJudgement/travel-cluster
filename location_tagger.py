@@ -5,6 +5,7 @@ import glob
 import os
 import csv
 import location_reader
+from utils import get_latest_csv_filepath
 class EditTracker:
     def __init__(self, headers, data):
         self.data = data
@@ -70,14 +71,6 @@ def tag_locations(data_tracker, geocoder_service):
         data_tracker.set_value(i, data_tracker.col_index("Latitude"), lat)
         data_tracker.set_value(i, data_tracker.col_index("Longitude"), long)
 
-def get_latest_csv_filepath():
-    folder = os.path.join(os.getcwd(), "csv_snapshots")
-    csv_files = glob.glob(os.path.join(folder, "*.csv"))
-    if not csv_files:
-        return None
-    latest_file = max(csv_files, key=os.path.getctime)
-    return latest_file
-
 mock_lat = 0.0
 mock_long = 0.0
 def mock_geocoder(address):
@@ -87,15 +80,31 @@ def mock_geocoder(address):
     mock_lat += 0.1
     mock_long -= 0.1
     return mock_lat, mock_long
+def mock_file_provider():
+    return get_latest_csv_filepath("csv_snapshots")
 
+def mock_apply_edits(tracker):
+    for row, col, val in tracker.get_edits():
+        print(f"Editing cell ({row}, {col}) with value: {val}")
 def main():
     load_dotenv()
     url = os.getenv("SPREADSHEET_URL")
+
     tracker = load_data(file_provider=lambda : location_reader.download_csv(url))
+    # tracker = load_data(file_provider=mock_file_provider)
+
     print(f"Loaded {len(tracker.get_data())} rows from the CSV file.")
     print(f"Headers: {tracker.get_headers()}")
+
+
+    # tag_locations(tracker, geocoder_service=mock_geocoder)
     tag_locations(tracker, geocoder_service=geocoder.get_coordinates)
 
+    # mock_apply_edits(tracker)
+    apply_edits(tracker, url)  # Uncomment to apply edits to the spreadsheet
+
+
+def apply_edits(tracker, url):
     # url = os.getenv("SPREADSHEET_URL")
     remote = spreadsheet.SpreadsheetController()
     remote.open_spreadsheet(url)
@@ -109,5 +118,7 @@ def main():
 
     time.sleep(7)  # Wait for the edits to be applied
     remote.close_spreadsheet()
+
 if __name__ == "__main__":
     main()
+    
